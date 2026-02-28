@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1041332183554",
+    "project_id": "electionsamiti",
+    "storage_bucket": "electionsamiti.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1041332183554:android:72e007e673134f6fe23d1b",
+        "android_client_info": {
+          "package_name": "com.example.election_samiti"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCBqg02_8Ca11HlfkL9BtLsBnulDwSSv3Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
