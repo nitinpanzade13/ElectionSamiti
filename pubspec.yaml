@@ -39,6 +39,8 @@ dependencies:
   firebase_auth: ^6.1.4
   provider: ^6.1.5+1
   fl_chart: ^1.1.1
+  url_launcher: ^6.3.2
+  blue_thermal_printer: ^1.2.3
 
 dev_dependencies:
   flutter_test:
