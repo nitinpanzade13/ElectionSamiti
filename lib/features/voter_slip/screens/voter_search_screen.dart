@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'slip_preview_screen.dart';
 
+import '../../auth/services/auth_service.dart';
+import '../services/voter_service.dart';
+import '../models/voter_model.dart';
+
 class VoterSlipSearchScreen extends StatefulWidget {
   const VoterSlipSearchScreen({super.key});
 
@@ -9,8 +13,13 @@ class VoterSlipSearchScreen extends StatefulWidget {
 }
 
 class _VoterSlipSearchScreenState extends State<VoterSlipSearchScreen> {
-  // This controller grabs the text the user types into the search bar
+  // Controllers and Services
   final TextEditingController _voterIdController = TextEditingController();
+  final AuthService _authService = AuthService();
+  final VoterService _voterService = VoterService();
+
+  // Loading state to show the spinner
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -18,14 +27,44 @@ class _VoterSlipSearchScreenState extends State<VoterSlipSearchScreen> {
     super.dispose();
   }
 
-  void _searchVoter() {
+  void _searchVoter() async {
     final voterId = _voterIdController.text.trim();
-    if (voterId.isNotEmpty) {
-      // Navigate to the Slip Preview Screen
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const SlipPreviewScreen()),
-      );
+    if (voterId.isEmpty) return;
+
+    // 1. Start the loading spinner
+    setState(() {
+      _isLoading = true;
+    });
+
+    // 2. Fetch the real data from Firestore!
+    VoterModel? fetchedVoter = await _voterService.getVoterById(voterId);
+
+    // 3. Stop the loading spinner
+    setState(() {
+      _isLoading = false;
+    });
+
+    // 4. Handle the result
+    if (fetchedVoter != null) {
+      // Success! Send the voter data to the Preview Screen
+      if (mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => SlipPreviewScreen(voter: fetchedVoter),
+          ),
+        );
+      }
+    } else {
+      // Failed! Voter ID does not exist in the database
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Voter ID not found in database!'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
     }
   }
 
@@ -35,6 +74,16 @@ class _VoterSlipSearchScreenState extends State<VoterSlipSearchScreen> {
       appBar: AppBar(
         title: const Text('Voter Slip Utility'),
         centerTitle: true,
+        actions: [
+          // --- Log Out Button ---
+          IconButton(
+            icon: const Icon(Icons.logout),
+            tooltip: 'Log Out',
+            onPressed: () async {
+              await _authService.logout();
+            },
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
@@ -50,6 +99,8 @@ class _VoterSlipSearchScreenState extends State<VoterSlipSearchScreen> {
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
             ),
             const SizedBox(height: 24),
+
+            // --- Search Input ---
             SearchBar(
               controller: _voterIdController,
               hintText: 'e.g. MH1234567',
@@ -60,17 +111,28 @@ class _VoterSlipSearchScreenState extends State<VoterSlipSearchScreen> {
               onSubmitted: (_) => _searchVoter(),
             ),
             const SizedBox(height: 32),
+
+            // --- Fetch Button with Loading State ---
             ElevatedButton(
-              onPressed: _searchVoter,
+              onPressed: _isLoading ? null : _searchVoter,
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 backgroundColor: Colors.indigo,
                 foregroundColor: Colors.white,
               ),
-              child: const Text(
-                'Fetch Voting Slip',
-                style: TextStyle(fontSize: 16),
-              ),
+              child: _isLoading
+                  ? const SizedBox(
+                      height: 24,
+                      width: 24,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2.5,
+                      ),
+                    )
+                  : const Text(
+                      'Fetch Voting Slip',
+                      style: TextStyle(fontSize: 16),
+                    ),
             ),
           ],
         ),
