@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/voter_model.dart';
+import '../services/message_service.dart';
+import '../services/print_service.dart';
 
 class SlipPreviewScreen extends StatelessWidget {
   // 1. Declare the VoterModel variable to hold the real data
@@ -61,11 +63,27 @@ class SlipPreviewScreen extends StatelessWidget {
             const Spacer(), // Pushes the buttons to the bottom of the screen
             // --- Action Buttons ---
             ElevatedButton.icon(
-              onPressed: () {
-                // TODO: Trigger Bluetooth Thermal Printer
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Connecting to Printer...')),
-                );
+              onPressed: () async {
+                try {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Sending to printer...')),
+                  );
+
+                  // FIXED: Now passing the correct properties from the 'voter' object
+                  await PrintService.printVoterSlip(
+                    voterName: voter.fullName,
+                    voterId: voter.voterId,
+                    constituency: voter.constituency,
+                    wardNumber: voter.wardNumber,
+                    boothNumber: voter.boothNumber,
+                  );
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text('Error: $e')));
+                  }
+                }
               },
               icon: const Icon(Icons.print),
               label: const Text(
@@ -78,13 +96,27 @@ class SlipPreviewScreen extends StatelessWidget {
                 foregroundColor: Colors.white,
               ),
             ),
+
             const SizedBox(height: 16),
+
             OutlinedButton.icon(
-              onPressed: () {
-                // TODO: Open WhatsApp with pre-filled message
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Opening WhatsApp...')),
-                );
+              onPressed: () async {
+                try {
+                  // FIXED: Now passing the correct properties from the 'voter' object
+                  await MessageService.sendSlipViaWhatsApp(
+                    voterName: voter.fullName,
+                    voterId: voter.voterId,
+                    constituency: voter.constituency,
+                    wardNumber: voter.wardNumber,
+                    boothNumber: voter.boothNumber,
+                  );
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text('Error: $e')));
+                  }
+                }
               },
               icon: const Icon(Icons.message, color: Colors.green),
               label: const Text(
