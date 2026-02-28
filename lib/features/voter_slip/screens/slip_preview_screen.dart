@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
+import '../models/voter_model.dart';
 
 class SlipPreviewScreen extends StatelessWidget {
-  // Mock data: Later, this will be passed in from the search screen
-  final String voterName = "Rahul Sharma";
-  final String voterId = "MH123456789";
-  final String constituency = "Pune Cantonment";
-  final int wardNumber = 14;
-  final int boothNumber = 102;
-  final String partNumber = "Part-45";
+  // 1. Declare the VoterModel variable to hold the real data
+  final VoterModel voter;
 
-  const SlipPreviewScreen({super.key});
+  // 2. Require it when this screen is opened
+  const SlipPreviewScreen({super.key, required this.voter});
 
   @override
   Widget build(BuildContext context) {
@@ -42,18 +39,20 @@ class SlipPreviewScreen extends StatelessWidget {
                       ),
                     ),
                     const Divider(thickness: 1.5, height: 32),
-                    _buildInfoRow('Voter Name', voterName),
+
+                    // 3. Inject the real data from your Firestore document!
+                    _buildInfoRow('Voter Name', voter.fullName),
                     const SizedBox(height: 12),
-                    _buildInfoRow('Voter ID', voterId),
+                    _buildInfoRow('Voter ID', voter.voterId),
                     const SizedBox(height: 12),
-                    _buildInfoRow('Constituency', constituency),
+                    _buildInfoRow('Constituency', voter.constituency),
                     const SizedBox(height: 12),
                     _buildInfoRow(
                       'Ward / Booth',
-                      'Ward $wardNumber  |  Booth $boothNumber',
+                      'Ward ${voter.wardNumber}  |  Booth ${voter.boothNumber}',
                     ),
                     const SizedBox(height: 12),
-                    _buildInfoRow('Part Number', partNumber),
+                    _buildInfoRow('Part Number', voter.partNumber),
                   ],
                 ),
               ),
