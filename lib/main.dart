@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
-import 'features/auth/screens/login_screen.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
-// 1. Import our new screen!
+import 'features/auth/screens/welcome_screen.dart';
 import 'features/voter_slip/screens/voter_search_screen.dart';
 
 void main() async {
@@ -22,30 +21,34 @@ class ElectionSamitiApp extends StatelessWidget {
       title: 'ElectionSamiti',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFFFF9933),
+          brightness: Brightness.dark,
+        ),
         useMaterial3: true,
       ),
-      // We replace the hardcoded "home: const LoginScreen()" with a StreamBuilder
       home: StreamBuilder<User?>(
-        // This stream listens to Firebase. If a user is cached, it emits their data.
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {
-          // 1. While it's checking, show a loading circle
+          // While checking auth state, show loading
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Scaffold(
+              backgroundColor: Color(0xFF0F0C29),
               body: Center(
-                child: CircularProgressIndicator(color: Colors.indigo),
+                child: CircularProgressIndicator(
+                  color: Color(0xFFFF9933),
+                ),
               ),
             );
           }
 
-          // 2. If it found a logged-in user, send them straight to the Search Screen!
+          // If user is logged in, go to main app
           if (snapshot.hasData) {
             return const VoterSlipSearchScreen();
           }
 
-          // 3. If no one is logged in, show the Login Screen
-          return const LoginScreen();
+          // If not logged in, show the Welcome Screen
+          return const WelcomeScreen();
         },
       ),
     );

@@ -1,53 +1,57 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../models/worker_model.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // 1. Log In Function
-  // We are using Email/Password here because it's the easiest for an Admin to generate and hand to a worker.
-  Future<WorkerModel?> login(String email, String password) async {
+  /// Login with email and password
+  /// Returns the authenticated User if successful, null otherwise
+  Future<User?> login(String email, String password) async {
     try {
-      // Step A: Authenticate with Firebase
+      print("🔐 Attempting login for: $email");
+      
+      // Authenticate with Firebase
       UserCredential userCredential = await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
 
-      // Step B: Fetch their specific Role and Ward data from Firestore
       if (userCredential.user != null) {
-        return await getWorkerDetails(userCredential.user!.uid);
+        print("✅ Firebase Auth successful for UID: ${userCredential.user!.uid}");
+        return userCredential.user;
       }
+      
+      print("❌ Login failed: No user returned");
+      return null;
     } on FirebaseAuthException catch (e) {
-      // Here you can handle specific errors like 'user-not-found' or 'wrong-password'
-      print("Auth Error: ${e.message}");
+      print("❌ Auth Error: ${e.code} - ${e.message}");
+      return null;
+    } catch (e) {
+      print("❌ Unexpected Error: $e");
       return null;
     }
-    return null;
   }
 
-  // 2. Fetch Worker Data Function
-  Future<WorkerModel?> getWorkerDetails(String uid) async {
+  /// Get current logged-in user
+  User? getCurrentUser() {
+    return _auth.currentUser;
+  }
+
+  /// Check if user exists in a specific collection
+  Future<bool> userExistsInCollection(String uid, String collection) async {
     try {
-      DocumentSnapshot doc = await _firestore
-          .collection('workers')
-          .doc(uid)
-          .get();
-
-      if (doc.exists) {
-        // We use the model you built earlier to convert the database JSON into a Dart Object!
-        return WorkerModel.fromMap(doc.data() as Map<String, dynamic>, doc.id);
-      }
+      final doc = await _firestore.collection(collection).doc(uid).get();
+      return doc.exists;
     } catch (e) {
-      print("Firestore Error: $e");
+      print("Error checking collection $collection: $e");
+      return false;
     }
-    return null;
   }
 
-  // 3. Log Out Function
+  /// Log out
   Future<void> logout() async {
     await _auth.signOut();
+    print("👋 User logged out");
   }
 }
